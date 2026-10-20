@@ -17,11 +17,11 @@
       min-height: 100vh;
       display: grid;
       place-items: center;
+      padding: 24px;
       background: #151515;
       color: #e4c477;
       font-family: Arial, sans-serif;
       text-align: center;
-      padding: 24px;
     }
 
     main {
@@ -69,10 +69,10 @@
     <p>Accede con tu cuenta de Google para continuar.</p>
 
     <div id="google-button"></div>
-    <p id="status" role="status">Cargando inicio de sesión…</p>
+    <p id="status" role="status">Cargando inicio de sesión...</p>
 
     <p class="note">
-      Prueba inicial de acceso. Todavía no se realizan ventas
+      Prueba inicial. Todavía no se registran ventas
       ni se consultan datos de socios.
     </p>
   </main>
@@ -85,29 +85,12 @@
       document.getElementById('status').textContent = message;
     }
 
-    function handleCredentialResponse(response) {
-      // No mostramos ni guardamos la credencial en la página.
-      if (response && response.credential) {
-        showStatus(
-          'Google ha devuelto una credencial. ' +
-          'La verificación segura del servidor está pendiente.'
-        );
-      } else {
-        showStatus('No se ha recibido una credencial de Google.');
-      }
-    }
-
     function initializeGoogleLogin() {
-      if (!window.google || !window.google.accounts) {
-        showStatus('No se ha podido cargar el acceso de Google. Recarga la página.');
-        return;
-      }
-
-      if (
-        !GOOGLE_CLIENT_ID ||
-        GOOGLE_CLIENT_ID === 'PEGA_AQUI_TU_ID_DE_CLIENTE'
-      ) {
-        showStatus('Falta configurar el ID de cliente de Google.');
+      if (!window.google || !window.google.accounts ||
+          !window.google.accounts.id) {
+        showStatus(
+          'No se ha podido cargar Google. Comprueba la conexión y recarga.'
+        );
         return;
       }
 
@@ -127,17 +110,40 @@
         }
       );
 
-      showStatus('Listo para iniciar sesión.');
+      showStatus('Inicio de sesión preparado.');
     }
 
-    window.addEventListener('load', () => {
-      const checkGoogle = setInterval(() => {
-        if (window.google && window.google.accounts) {
-          clearInterval(checkGoogle);
+    function handleCredentialResponse(response) {
+      if (response && response.credential) {
+        showStatus(
+          'Google ha respondido correctamente. ' +
+          'Falta validar la identidad en el servidor.'
+        );
+      } else {
+        showStatus('Google no ha devuelto una credencial.');
+      }
+    }
+
+    window.addEventListener('load', function () {
+      let attempts = 0;
+
+      const timer = setInterval(function () {
+        attempts++;
+
+        if (window.google && window.google.accounts &&
+            window.google.accounts.id) {
+          clearInterval(timer);
           initializeGoogleLogin();
+        } else if (attempts >= 30) {
+          clearInterval(timer);
+          showStatus(
+            'No se ha cargado Google. Recarga la página o revisa si ' +
+            'el navegador bloquea el servicio.'
+          );
         }
-      }, 200);
+      }, 300);
     });
   </script>
 </body>
 </html>
+
