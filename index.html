@@ -114,6 +114,7 @@
     }
 
     function handleCredentialResponse(response) {
+      console.log('Respuesta de Google recibida:', !!response?.credential);
       if (response && response.credential) {
         showStatus(
           'Google ha respondido correctamente. ' +
