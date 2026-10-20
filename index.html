@@ -6,7 +6,12 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="robots" content="noindex, nofollow">
   <title>KARAK Bebidas</title>
+
+  <script src="https://accounts.google.com/gsi/client" async defer></script>
+
   <style>
+    * { box-sizing: border-box; }
+
     body {
       margin: 0;
       min-height: 100vh;
@@ -16,17 +21,123 @@
       color: #e4c477;
       font-family: Arial, sans-serif;
       text-align: center;
+      padding: 24px;
     }
-    main { padding: 24px; }
-    h1 { letter-spacing: 3px; }
-    p { color: #eee; }
+
+    main {
+      width: 100%;
+      max-width: 440px;
+      padding: 32px 24px;
+      border: 1px solid #5b4a28;
+      border-radius: 16px;
+      background: #1d1d1d;
+    }
+
+    h1 {
+      letter-spacing: 3px;
+      margin-bottom: 8px;
+    }
+
+    p {
+      color: #eee;
+      line-height: 1.5;
+    }
+
+    #google-button {
+      display: flex;
+      justify-content: center;
+      margin: 28px 0 16px;
+      min-height: 44px;
+    }
+
+    #status {
+      font-size: 14px;
+      overflow-wrap: anywhere;
+    }
+
+    .note {
+      color: #aaa;
+      font-size: 12px;
+    }
   </style>
 </head>
+
 <body>
   <main>
     <h1>KARAK BEBIDAS</h1>
     <p>Aplicación del club</p>
-    <p>Preparando el sistema de acceso seguro…</p>
+    <p>Accede con tu cuenta de Google para continuar.</p>
+
+    <div id="google-button"></div>
+    <p id="status" role="status">Cargando inicio de sesión…</p>
+
+    <p class="note">
+      Prueba inicial de acceso. Todavía no se realizan ventas
+      ni se consultan datos de socios.
+    </p>
   </main>
+
+  <script>
+    const GOOGLE_CLIENT_ID =
+      '598036183937-0o8qtrj6fdb7s694bppvs2n7dtua463c.apps.googleusercontent.com';
+
+    function showStatus(message) {
+      document.getElementById('status').textContent = message;
+    }
+
+    function handleCredentialResponse(response) {
+      // No mostramos ni guardamos la credencial en la página.
+      if (response && response.credential) {
+        showStatus(
+          'Google ha devuelto una credencial. ' +
+          'La verificación segura del servidor está pendiente.'
+        );
+      } else {
+        showStatus('No se ha recibido una credencial de Google.');
+      }
+    }
+
+    function initializeGoogleLogin() {
+      if (!window.google || !window.google.accounts) {
+        showStatus('No se ha podido cargar el acceso de Google. Recarga la página.');
+        return;
+      }
+
+      if (
+        !GOOGLE_CLIENT_ID ||
+        GOOGLE_CLIENT_ID === '598036183937-0o8qtrj6fdb7s694bppvs2n7dtua463c.apps.googleusercontent.com'
+      ) {
+        showStatus('Falta configurar el ID de cliente de Google.');
+        return;
+      }
+
+      google.accounts.id.initialize({
+        client_id: GOOGLE_CLIENT_ID,
+        callback: handleCredentialResponse
+      });
+
+      google.accounts.id.renderButton(
+        document.getElementById('google-button'),
+        {
+          theme: 'filled_black',
+          size: 'large',
+          shape: 'pill',
+          text: 'signin_with',
+          locale: 'es'
+        }
+      );
+
+      showStatus('Listo para iniciar sesión.');
+    }
+
+    window.addEventListener('load', () => {
+      const checkGoogle = setInterval(() => {
+        if (window.google && window.google.accounts) {
+          clearInterval(checkGoogle);
+          initializeGoogleLogin();
+        }
+      }, 200);
+    });
+  </script>
 </body>
 </html>
